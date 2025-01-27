@@ -36,3 +36,14 @@ train_labels = np.array(fake_labels + real_labels)
 shuffled_indices = np.random.permutation(len(train_images))
 train_images = train_images[shuffled_indices]
 train_labels = train_labels[shuffled_indices]
+
+#Visualize data distribution
+def visualize_data_distribution(labels):
+    unique, counts = np.unique(labels, return_counts = True)
+    plt.bar(["Fake", "Real"], counts)
+    plt.title("Data Distribution")
+    plt.xlabel("Class")
+    plt.ylabel("Number of Images")
+    plt.show()
+
+visualize_data_distribution(train_labels)
