@@ -24,3 +24,15 @@ def load_images_from_folder(folder_path, label):
             labels.append(label) # 1 for real, 0 for fake
     return images, labels
 
+#Load training Images
+fake_images, fake_labels = load_images_from_folder(fake_images_path, label=0) #0 for fake
+real_images, real_labels = load_images_from_folder(real_images_path, label=1)
+
+#Combine fake and real data
+train_images = np.array(fake_images + real_images)
+train_labels = np.array(fake_labels + real_labels)
+
+#Shuffle data to ensure randomness
+shuffled_indices = np.random.permutation(len(train_images))
+train_images = train_images[shuffled_indices]
+train_labels = train_labels[shuffled_indices]
