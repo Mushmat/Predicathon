@@ -30,3 +30,7 @@ print("Model loaded successfully!")
 # Predict on test images
 predictions = model.predict(test_images)
 predicted_labels = np.argmax(predictions, axis=1)  # Convert probabilities to class labels
+
+# Export variables for `generate_predictions.py`
+def get_predictions_and_names():
+    return predicted_labels, image_names
