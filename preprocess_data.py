@@ -12,3 +12,14 @@ def preprocess_images(images, size=(224,224)):
         resized_images.append(resized_img)
     return np.array(resized_images)
 
+#Preprocess
+train_images = preprocess_images(train_images)
+X_train, X_val, y_train, y_val = train_test_split(train_images, train_labels, test_size=0.2, random_state=42)
+
+
+#Convert labels to categorical for classification
+y_train = to_categorical(y_train, num_classes = 2)
+y_val = to_categorical(y_val, num_classes = 2)
+
+print(f"Training data shape: {X_train.shape}, Training labels shape: {y_train.shape}")
+print(f"Validation data shape: {X_val.shape}, Validation labels shape: {y_val.shape}")
