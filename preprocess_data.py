@@ -1,3 +1,5 @@
+from load_data import train_images, train_labels
+
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.utils import to_categorical
 import cv2
