@@ -7,7 +7,7 @@ import numpy as np
 
 
 # Preprocessing (Resize and Normalize)
-def preprocess_images(images, size=(224,224)):
+def preprocess_images(images, size=(32,32)):
     resized_images = []
     for img in images:
         resized_img = cv2.resize(img,size) / 255.0
@@ -15,7 +15,7 @@ def preprocess_images(images, size=(224,224)):
     return np.array(resized_images)
 
 #Preprocess
-train_images = preprocess_images(train_images)
+train_images = preprocess_images(train_images, size=(32, 32))
 X_train, X_val, y_train, y_val = train_test_split(train_images, train_labels, test_size=0.2, random_state=42)
 
 
