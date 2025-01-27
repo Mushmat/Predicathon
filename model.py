@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as ply
 
 # Paths
-train_images_path = ""
-train_json_path = ""
-test_images_path = ""
-test_json_path = ""
+fake_images_path = r"E:/IIITB/Predicathon/project/data/train/fake_cifake_images"
+real_images_path = r"E:/IIITB/Predicathon/project/data/train/real_cifake_images"
+test_images_path = r"E:/IIITB/Predicathon/project/data/test/test"
+train_json_path = r"E:/IIITB/Predicathon/project/data/real_cifake_preds.json"
