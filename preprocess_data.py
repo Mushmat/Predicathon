@@ -2,10 +2,12 @@ from load_data import train_images, train_labels
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.utils import to_categorical
 import numpy as np
+from tensorflow.keras.applications.efficientnet import preprocess_input  # ✅ Add this import
 
-# Ensure images are correctly normalized (already handled in training script)
+# Ensure images are correctly normalized for EfficientNet
 def preprocess_images(images):
-    images = np.array(images, dtype="float32") / 255.0  # Normalize between 0-1
+    images = np.array(images, dtype="float32")  # Ensure correct data type
+    images = preprocess_input(images)  # Apply EfficientNet preprocessing
     return images
 
 # Preprocess images
