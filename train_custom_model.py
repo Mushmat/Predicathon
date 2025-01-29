@@ -3,6 +3,8 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, BatchNormalization
 from tensorflow.keras.optimizers import Adam
 from preprocess_data import X_train, X_val, y_train, y_val  # Import preprocessed data
+from tensorflow.keras.callbacks import EarlyStopping
+
 
 #Step 1: Buidling the custom CNN Model
 def build_custom_model(input_shape = (32,32,3)):
@@ -44,11 +46,14 @@ model.summary()
 batch_size = 32
 epochs = 25  # Increase epochs as we train from scratch
 
+early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+
 history = model.fit(
     X_train, y_train,
     validation_data=(X_val, y_val),
-    batch_size=batch_size,
-    epochs=epochs,
+    batch_size=32,
+    epochs=50,  # Increase max epochs but use early stopping
+    callbacks=[early_stopping],
     verbose=1
 )
 
