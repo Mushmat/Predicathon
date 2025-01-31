@@ -29,6 +29,7 @@ for layer in base_model.layers[-30:]:
 # Add Custom Layers
 x = base_model.output
 x = GlobalAveragePooling2D()(x)
+
 x = Dense(256, activation='relu')(x)  # Increased neurons
 x = Dropout(0.6)(x)  # Higher dropout for better generalization
 output = Dense(2, activation='softmax')(x)
