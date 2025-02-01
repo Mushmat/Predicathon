@@ -1,63 +1,80 @@
 import os
-os.environ['TF_XLA_FLAGS'] = '--tf_xla_cpu_global_jit'  # Enable XLA on CPU
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # (Optional) Force CPU only if GPU is causing issues
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
+# ----------------------------------------------------------------
+# 1) Optional CPU/GPU Settings
+# ----------------------------------------------------------------
+# If GPU is giving you trouble, uncomment the following line to force CPU use:
+# os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
+# Enable XLA on CPU (or GPU)
+os.environ['TF_XLA_FLAGS'] = '--tf_xla_cpu_global_jit'
 
 import tensorflow as tf
 
-# Enable JIT compilation (XLA) for possible CPU speedups
+# Enable JIT compilation (XLA) in TensorFlow for potential speed gains
 tf.config.optimizer.set_jit(True)
 
 # Check GPU availability
-print("GPUs Available:", tf.config.list_physical_devices('GPU'))
+gpus = tf.config.list_physical_devices('GPU')
+print("GPUs Available:", gpus)
 
-from tensorflow.keras.applications import EfficientNetB3
-from tensorflow.keras import layers, models, optimizers, callbacks
-
-# Use mixed precision only if GPU is detected
-if len(tf.config.list_physical_devices('GPU')) == 0:
-    print("⚠️ No GPU detected, disabling mixed precision")
+# If you want to use mixed precision only when a GPU is present:
+if len(gpus) == 0:
+    print("⚠️ No GPU detected; using float32.")
     tf.keras.mixed_precision.set_global_policy('float32')
 else:
+    print("✅ GPU detected; enabling mixed precision.")
     tf.keras.mixed_precision.set_global_policy('mixed_float16')
 
-# --------------------
-# Hyperparameters
-# --------------------
+# ----------------------------------------------------------------
+# 2) Hyperparameters
+# ----------------------------------------------------------------
 BATCH_SIZE = 32
-IMG_SIZE = (96, 96)       # Reduced from (128, 128) to speed up on CPU
-EPOCHS_FROZEN = 5         # Train with frozen base model
-EPOCHS_UNFROZEN = 20      # Then unfreeze and train further
+IMG_SIZE = (96, 96)       # Reduced size for faster CPU training
+EPOCHS_FROZEN = 5         # Train with the base model frozen
+EPOCHS_UNFROZEN = 20      # Then unfreeze for fine-tuning
 LEARNING_RATE = 0.001
 DROPOUT_RATE = 0.6
 
-# --------------------
-# Data Paths
-# --------------------
-train_dir = "E:/IIITB/Predicathon/project/data/train"
-valid_dir = "E:/IIITB/Predicathon/project/data/validation"
+# Directory: Must contain subfolders "fake_cifake_images" and "real_cifake_images"
+DATA_DIR = r"E:/IIITB/Predicathon/project/data/train"
 
-# --------------------
-# Datasets (with caching and prefetching)
-# --------------------
+# ----------------------------------------------------------------
+# 3) Build Train/Val Datasets Directly from Directory
+# ----------------------------------------------------------------
 train_dataset = tf.keras.utils.image_dataset_from_directory(
-    train_dir,
+    DATA_DIR,
+    labels="inferred",              # Infer labels from subfolder names
+    label_mode="categorical",       # 2D one-hot labels
+    validation_split=0.2,           # 20% for validation
+    subset="training",              # This dataset is the "training" subset
+    seed=42,                        # For reproducible splits
+    shuffle=True,
     image_size=IMG_SIZE,
-    batch_size=BATCH_SIZE,
-    label_mode="categorical",
-    shuffle=True
-).cache().prefetch(tf.data.AUTOTUNE)
+    batch_size=BATCH_SIZE
+)
 
-valid_dataset = tf.keras.utils.image_dataset_from_directory(
-    valid_dir,
+val_dataset = tf.keras.utils.image_dataset_from_directory(
+    DATA_DIR,
+    labels="inferred",
+    label_mode="categorical",
+    validation_split=0.2,
+    subset="validation",            # This dataset is the "validation" subset
+    seed=42,
+    shuffle=True,
     image_size=IMG_SIZE,
-    batch_size=BATCH_SIZE,
-    label_mode="categorical",
-    shuffle=False
-).cache().prefetch(tf.data.AUTOTUNE)
+    batch_size=BATCH_SIZE
+)
 
-# --------------------
-# Learning Rate Scheduler: Cosine Decay Restarts
-# --------------------
+# Optional: Prefetch for performance
+train_dataset = train_dataset.cache().prefetch(tf.data.AUTOTUNE)
+val_dataset   = val_dataset.cache().prefetch(tf.data.AUTOTUNE)
+
+# ----------------------------------------------------------------
+# 4) Learning Rate Scheduler (Cosine Decay Restarts)
+# ----------------------------------------------------------------
 cosine_decay = tf.keras.optimizers.schedules.CosineDecayRestarts(
     initial_learning_rate=LEARNING_RATE,
     first_decay_steps=10,
@@ -66,15 +83,20 @@ cosine_decay = tf.keras.optimizers.schedules.CosineDecayRestarts(
     alpha=1e-6
 )
 
-# --------------------
-# Model Architecture
-# --------------------
+# ----------------------------------------------------------------
+# 5) Build the Model (EfficientNetB3)
+# ----------------------------------------------------------------
+from tensorflow.keras.applications import EfficientNetB3
+from tensorflow.keras import layers, models, optimizers, callbacks
+
 base_model = EfficientNetB3(
     weights="imagenet",
     include_top=False,
     input_shape=(IMG_SIZE[0], IMG_SIZE[1], 3)
 )
-base_model.trainable = False  # Freeze base model initially
+
+# Freeze the base model initially (transfer learning)
+base_model.trainable = False
 
 model = models.Sequential([
     base_model,
@@ -84,13 +106,13 @@ model = models.Sequential([
     layers.Dropout(DROPOUT_RATE),
     layers.Dense(256, activation='swish'),
     layers.Dropout(DROPOUT_RATE),
-    # Use float32 for the final layer if mixed precision is enabled
-    layers.Dense(2, activation="softmax", dtype="float32")
+    # Use float32 for the final layer if using mixed precision
+    layers.Dense(2, activation='softmax', dtype='float32')
 ])
 
-# --------------------
-# Compile Model
-# --------------------
+# ----------------------------------------------------------------
+# 6) Compile the Model
+# ----------------------------------------------------------------
 optimizer = optimizers.AdamW(learning_rate=cosine_decay, weight_decay=1e-5)
 model.compile(
     optimizer=optimizer,
@@ -98,14 +120,15 @@ model.compile(
     metrics=["accuracy"]
 )
 
-# --------------------
-# Callbacks
-# --------------------
+# ----------------------------------------------------------------
+# 7) Define Callbacks (Checkpoints, Early Stopping)
+# ----------------------------------------------------------------
+# NOTE: The `.keras` extension is now required if saving the full model
 checkpoint_cb = callbacks.ModelCheckpoint(
-    "efficientnet_deepfake_detector_v2_tf",  # SavedModel format folder
+    filepath="best_deepfake_model.keras",  # must end with .keras in TF 2.13+
     save_best_only=True,
     monitor="val_accuracy",
-    save_format="tf"
+    save_weights_only=False  # saving the full model in .keras format
 )
 
 early_stop_cb = callbacks.EarlyStopping(
@@ -114,29 +137,30 @@ early_stop_cb = callbacks.EarlyStopping(
     restore_best_weights=True
 )
 
-# --------------------
-# 1) Train with Frozen Base Model
-# --------------------
+# ----------------------------------------------------------------
+# 8) Training - Part 1 (Frozen Base)
+# ----------------------------------------------------------------
 history_frozen = model.fit(
     train_dataset,
-    validation_data=valid_dataset,
-    epochs=EPOCHS_FROZEN,
+    validation_data=val_dataset,
+    epochs=EPOCHS_FROZEN,   # 5 epochs
     callbacks=[checkpoint_cb, early_stop_cb]
 )
 
-# --------------------
-# 2) Unfreeze Base Model for Fine-Tuning
-# --------------------
+# ----------------------------------------------------------------
+# 9) Unfreeze & Fine-tune
+# ----------------------------------------------------------------
 base_model.trainable = True
 
 history_unfrozen = model.fit(
     train_dataset,
-    validation_data=valid_dataset,
-    epochs=EPOCHS_UNFROZEN,  # 20 more epochs
+    validation_data=val_dataset,
+    epochs=EPOCHS_UNFROZEN,  # 20 epochs
     callbacks=[checkpoint_cb, early_stop_cb]
 )
 
-# --------------------
-# Save Final Model (TensorFlow SavedModel format)
-# --------------------
-model.save("efficientnet_deepfake_detector_v2_tf", save_format="tf")
+# ----------------------------------------------------------------
+# 10) Save Final Model in TF SavedModel Format (Optional)
+# ----------------------------------------------------------------
+# If you also want to save in the older "SavedModel" folder format:
+model.save("efficientnet_deepfake_detector_v2_tf")  
