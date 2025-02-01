@@ -8,21 +8,19 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # Force CPU use
 os.environ['TF_XLA_FLAGS'] = '--tf_xla_cpu_global_jit'
 import cv2
-from tensorflow.keras.applications.efficientnet import preprocess_input
 
 # --------------------------
 # Paths & Settings
 # --------------------------
 train_dir = r"E:/IIITB/Predicathon/project/data/train"
 valid_dir = r"E:/IIITB/Predicathon/project/data/validation"
-IMG_SIZE = (32, 32)  # Must match the load_data.py settings
+IMG_SIZE = (32, 32)  # Must match load_data.py
 
 # --------------------------
-# Preprocess Images: Convert to float32 and apply EfficientNet preprocessing
+# Preprocess Images: Convert to float32 and scale pixels to [0, 1]
 # --------------------------
 def preprocess_images(images):
-    images = np.array(images, dtype="float32")
-    images = preprocess_input(images)
+    images = np.array(images, dtype="float32") / 255.0
     return images
 
 train_images = preprocess_images(train_images)
@@ -49,14 +47,14 @@ if not os.path.exists(valid_dir):
     os.makedirs(os.path.join(valid_dir, "fake"))
     os.makedirs(os.path.join(valid_dir, "real"))
 
-# Save validation images to disk (this is an approximate method to recreate folders)
+# Save validation images to disk (this is an approximate method to recreate folder structure)
 for i in range(len(X_val)):
     img_name = f"val_{i}.jpg"
     # Determine folder based on label (0: fake, 1: real)
     label_dir = "real" if y_val[i][1] == 1 else "fake"
     img_path = os.path.join(valid_dir, label_dir, img_name)
-    # Convert image from RGB to BGR for OpenCV and save
-    original_img = X_val[i]
+    # Scale back to [0, 255] and convert from RGB to BGR for OpenCV saving
+    original_img = (X_val[i] * 255).astype("uint8")
     cv2.imwrite(img_path, cv2.cvtColor(original_img, cv2.COLOR_RGB2BGR))
 
 print("Validation images copied successfully.")
