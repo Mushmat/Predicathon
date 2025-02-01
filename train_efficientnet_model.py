@@ -8,6 +8,8 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # Force CPU use
 os.environ['TF_XLA_FLAGS'] = '--tf_xla_cpu_global_jit'
 
 import tensorflow as tf
+from tensorflow.keras import layers, models, optimizers, callbacks, regularizers
+
 print("✅ Running on CPU.")
 
 # --------------------------
@@ -15,9 +17,10 @@ print("✅ Running on CPU.")
 # --------------------------
 BATCH_SIZE = 32
 IMG_SIZE = (32, 32)
-EPOCHS = 50          # Total number of epochs; you can adjust this as needed
+EPOCHS = 50          # Total number of epochs
 LEARNING_RATE = 0.001
-DROPOUT_RATE = 0.3   # Slight dropout; adjust based on overfitting
+DROPOUT_RATE = 0.5   # Dropout rate
+L2_REG = 1e-4        # L2 regularization factor
 
 DATA_DIR = r"E:/IIITB/Predicathon/project/data/train"
 
@@ -31,7 +34,6 @@ data_augmentation = tf.keras.Sequential([
     tf.keras.layers.RandomTranslation(0.1, 0.1),  # add translation
     tf.keras.layers.RandomContrast(0.2)           # increase contrast variation
 ])
-
 
 # Create training and validation datasets using image_dataset_from_directory.
 train_dataset = tf.keras.utils.image_dataset_from_directory(
@@ -58,20 +60,22 @@ val_dataset = tf.keras.utils.image_dataset_from_directory(
     batch_size=BATCH_SIZE
 )
 
-# Apply data augmentation to training dataset only
+# Apply data augmentation to the training dataset only.
 def augment(image, label):
-    image = data_augmentation(image)
+    image = data_augmentation(image, training=True)
     return image, label
 
-# For our custom CNN, we simply scale pixels to [0, 1]
+# Scale images to [0, 1]
 def scale_input(image, label):
     image = tf.cast(image, tf.float32) / 255.0
     return image, label
 
+# Map augmentation and scaling
 train_dataset = train_dataset.map(augment, num_parallel_calls=tf.data.AUTOTUNE)
 train_dataset = train_dataset.map(scale_input, num_parallel_calls=tf.data.AUTOTUNE)
 val_dataset = val_dataset.map(scale_input, num_parallel_calls=tf.data.AUTOTUNE)
 
+# Cache and prefetch for improved performance
 train_dataset = train_dataset.cache().prefetch(tf.data.AUTOTUNE)
 val_dataset = val_dataset.cache().prefetch(tf.data.AUTOTUNE)
 
@@ -85,39 +89,54 @@ cosine_decay = tf.keras.optimizers.schedules.CosineDecay(
 )
 
 # --------------------------
-# Build a Custom CNN Model for 32x32 Images
+# Build a Custom CNN Model for 32x32 Images with L2 Regularization
 # --------------------------
-from tensorflow.keras import layers, models, optimizers, callbacks
-
 def build_custom_cnn(input_shape=(32, 32, 3), num_classes=2):
-    model = models.Sequential()
-    model.add(layers.Conv2D(64, (3,3), padding='same', activation='relu', input_shape=input_shape))
-    model.add(layers.BatchNormalization())
-    model.add(layers.Conv2D(64, (3,3), padding='same', activation='relu'))
-    model.add(layers.BatchNormalization())
-    model.add(layers.MaxPooling2D((2,2)))
-    model.add(layers.Dropout(DROPOUT_RATE))
+    inputs = tf.keras.Input(shape=input_shape)
     
-    model.add(layers.Conv2D(128, (3,3), padding='same', activation='relu'))
-    model.add(layers.BatchNormalization())
-    model.add(layers.Conv2D(128, (3,3), padding='same', activation='relu'))
-    model.add(layers.BatchNormalization())
-    model.add(layers.MaxPooling2D((2,2)))
-    model.add(layers.Dropout(DROPOUT_RATE))
+    # Block 1
+    x = layers.Conv2D(64, (3,3), padding='same', activation='relu',
+                      kernel_regularizer=regularizers.l2(L2_REG))(inputs)
+    x = layers.BatchNormalization()(x)
+    x = layers.Conv2D(64, (3,3), padding='same', activation='relu',
+                      kernel_regularizer=regularizers.l2(L2_REG))(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.MaxPooling2D((2,2))(x)
+    x = layers.Dropout(DROPOUT_RATE)(x)
     
-    model.add(layers.Conv2D(256, (3,3), padding='same', activation='relu'))
-    model.add(layers.BatchNormalization())
-    model.add(layers.Conv2D(256, (3,3), padding='same', activation='relu'))
-    model.add(layers.BatchNormalization())
-    model.add(layers.GlobalAveragePooling2D())
-    model.add(layers.Dense(128, activation='relu'))
-    model.add(layers.Dropout(DROPOUT_RATE))
-    model.add(layers.Dense(num_classes, activation='softmax', dtype='float32'))
+    # Block 2
+    x = layers.Conv2D(128, (3,3), padding='same', activation='relu',
+                      kernel_regularizer=regularizers.l2(L2_REG))(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Conv2D(128, (3,3), padding='same', activation='relu',
+                      kernel_regularizer=regularizers.l2(L2_REG))(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.MaxPooling2D((2,2))(x)
+    x = layers.Dropout(DROPOUT_RATE)(x)
+    
+    # Block 3
+    x = layers.Conv2D(256, (3,3), padding='same', activation='relu',
+                      kernel_regularizer=regularizers.l2(L2_REG))(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Conv2D(256, (3,3), padding='same', activation='relu',
+                      kernel_regularizer=regularizers.l2(L2_REG))(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.GlobalAveragePooling2D()(x)
+    
+    # Fully connected layers
+    x = layers.Dense(128, activation='relu', kernel_regularizer=regularizers.l2(L2_REG))(x)
+    x = layers.Dropout(DROPOUT_RATE)(x)
+    outputs = layers.Dense(num_classes, activation='softmax', dtype='float32')(x)
+    
+    model = tf.keras.Model(inputs=inputs, outputs=outputs)
     return model
 
 model = build_custom_cnn(input_shape=(IMG_SIZE[0], IMG_SIZE[1], 3), num_classes=2)
 model.summary()
 
+# --------------------------
+# Compile the Model
+# --------------------------
 optimizer = optimizers.Adam(learning_rate=cosine_decay)
 model.compile(optimizer=optimizer, loss="categorical_crossentropy", metrics=["accuracy"])
 
@@ -125,16 +144,18 @@ model.compile(optimizer=optimizer, loss="categorical_crossentropy", metrics=["ac
 # Callbacks: Model Checkpoint & Early Stopping
 # --------------------------
 checkpoint_cb = callbacks.ModelCheckpoint(
-    filepath="best_custom_cnn.keras",  # Save in native Keras format
+    filepath="best_custom_cnn_improved.keras",  # Save in native Keras format
     save_best_only=True,
     monitor="val_accuracy",
-    save_weights_only=False
+    save_weights_only=False,
+    verbose=1
 )
 
 early_stop_cb = callbacks.EarlyStopping(
     monitor="val_accuracy",
     patience=10,
-    restore_best_weights=True
+    restore_best_weights=True,
+    verbose=1
 )
 
 # --------------------------
@@ -150,4 +171,4 @@ history = model.fit(
 # --------------------------
 # Save the Final Model
 # --------------------------
-model.save("final_custom_cnn.keras")
+model.save("final_custom_cnn_improved.keras")
