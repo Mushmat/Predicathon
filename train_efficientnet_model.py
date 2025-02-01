@@ -16,7 +16,7 @@ print("✅ Running on CPU.")
 # Hyperparameters & Paths
 # --------------------------
 BATCH_SIZE = 32
-IMG_SIZE = (96, 96)  # Ensure this matches your data preprocessing (or update if needed)
+IMG_SIZE = (32, 32)  # Updated to 32x32 to match the provided data
 EPOCHS_FROZEN = 5    # Initial training with the base model frozen
 EPOCHS_UNFROZEN = 20 # Fine-tuning with the base model unfrozen
 LEARNING_RATE = 0.001
@@ -29,7 +29,7 @@ DATA_DIR = r"E:/IIITB/Predicathon/project/data/train"
 # --------------------------
 # Data Pipeline with Augmentation
 # --------------------------
-# Create a data augmentation pipeline. You can adjust or add more transforms as needed.
+# Create a data augmentation pipeline.
 data_augmentation = tf.keras.Sequential([
     tf.keras.layers.RandomFlip("horizontal"),
     tf.keras.layers.RandomRotation(0.1),
@@ -62,12 +62,12 @@ val_dataset = tf.keras.utils.image_dataset_from_directory(
     batch_size=BATCH_SIZE
 )
 
-# Apply EfficientNet preprocessing to the images (this matches the pre-trained model expectations)
+# Apply EfficientNet preprocessing to the images (matching pre-trained model expectations)
 def apply_preprocessing(image, label):
     image = preprocess_input(image)
     return image, label
 
-# Chain preprocessing and augmentation for the training dataset
+# Apply augmentation to the training dataset
 def augment(image, label):
     image = data_augmentation(image)
     return image, label
@@ -76,7 +76,7 @@ train_dataset = train_dataset.map(augment, num_parallel_calls=tf.data.AUTOTUNE)
 train_dataset = train_dataset.map(apply_preprocessing, num_parallel_calls=tf.data.AUTOTUNE)
 val_dataset = val_dataset.map(apply_preprocessing, num_parallel_calls=tf.data.AUTOTUNE)
 
-# Cache and prefetch for better performance
+# Cache and prefetch for performance improvements
 train_dataset = train_dataset.cache().prefetch(tf.data.AUTOTUNE)
 val_dataset   = val_dataset.cache().prefetch(tf.data.AUTOTUNE)
 
@@ -103,7 +103,7 @@ base_model = EfficientNetB3(
     include_top=False,
     input_shape=(IMG_SIZE[0], IMG_SIZE[1], 3)
 )
-base_model.trainable = False  # Freeze base model initially
+base_model.trainable = False  # Freeze the base model initially
 
 # Build the custom classification head
 model = models.Sequential([
@@ -139,7 +139,7 @@ checkpoint_cb = callbacks.ModelCheckpoint(
 
 early_stop_cb = callbacks.EarlyStopping(
     monitor="val_accuracy",
-    patience=5,
+    patience=10,
     restore_best_weights=True
 )
 
@@ -168,4 +168,4 @@ history_unfrozen = model.fit(
 # --------------------------
 # Save Final Model (TF SavedModel Format)
 # --------------------------
-model.save("efficientnet_deepfake_detector_v2_tf")
+model.save("efficientnet_deepfake_detector_v2_tf.keras")

@@ -3,6 +3,10 @@ from sklearn.model_selection import train_test_split
 from tensorflow.keras.utils import to_categorical
 import numpy as np
 import os
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # Force CPU use
+os.environ['TF_XLA_FLAGS'] = '--tf_xla_cpu_global_jit'
 import cv2
 from tensorflow.keras.applications.efficientnet import preprocess_input
 
@@ -11,7 +15,7 @@ from tensorflow.keras.applications.efficientnet import preprocess_input
 # --------------------------
 train_dir = r"E:/IIITB/Predicathon/project/data/train"
 valid_dir = r"E:/IIITB/Predicathon/project/data/validation"
-IMG_SIZE = (96, 96)  # Must match the previous settings
+IMG_SIZE = (32, 32)  # Must match the load_data.py settings
 
 # --------------------------
 # Preprocess Images: Convert to float32 and apply EfficientNet preprocessing

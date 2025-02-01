@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 # --------------------------
 fake_images_path = r"E:/IIITB/Predicathon/project/data/train/fake_cifake_images"
 real_images_path = r"E:/IIITB/Predicathon/project/data/train/real_cifake_images"
-IMG_SIZE = (96, 96)  # Ensure this matches the training size
+IMG_SIZE = (32, 32)  # Updated to match the competition data
 
 # --------------------------
 # Function to Load and Resize Images
