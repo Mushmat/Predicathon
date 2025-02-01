@@ -1,56 +1,50 @@
 import os
+# --------------------------
+# CPU-Only Settings
+# --------------------------
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
-# ----------------------------------------------------------------
-# 1) Optional CPU/GPU Settings
-# ----------------------------------------------------------------
-# If GPU is giving you trouble, uncomment the following line to force CPU use:
-# os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-
-# Enable XLA on CPU (or GPU)
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # Force CPU use
 os.environ['TF_XLA_FLAGS'] = '--tf_xla_cpu_global_jit'
 
 import tensorflow as tf
+from tensorflow.keras.applications.efficientnet import preprocess_input
 
-# Enable JIT compilation (XLA) in TensorFlow for potential speed gains
-tf.config.optimizer.set_jit(True)
+print("✅ Running on CPU.")
 
-# Check GPU availability
-gpus = tf.config.list_physical_devices('GPU')
-print("GPUs Available:", gpus)
-
-# If you want to use mixed precision only when a GPU is present:
-if len(gpus) == 0:
-    print("⚠️ No GPU detected; using float32.")
-    tf.keras.mixed_precision.set_global_policy('float32')
-else:
-    print("✅ GPU detected; enabling mixed precision.")
-    tf.keras.mixed_precision.set_global_policy('mixed_float16')
-
-# ----------------------------------------------------------------
-# 2) Hyperparameters
-# ----------------------------------------------------------------
+# --------------------------
+# Hyperparameters & Paths
+# --------------------------
 BATCH_SIZE = 32
-IMG_SIZE = (96, 96)       # Reduced size for faster CPU training
-EPOCHS_FROZEN = 5         # Train with the base model frozen
-EPOCHS_UNFROZEN = 20      # Then unfreeze for fine-tuning
+IMG_SIZE = (96, 96)  # Ensure this matches your data preprocessing (or update if needed)
+EPOCHS_FROZEN = 5    # Initial training with the base model frozen
+EPOCHS_UNFROZEN = 20 # Fine-tuning with the base model unfrozen
 LEARNING_RATE = 0.001
 DROPOUT_RATE = 0.6
 
-# Directory: Must contain subfolders "fake_cifake_images" and "real_cifake_images"
+# Directory structure:
+# DATA_DIR must have two subfolders: "fake_cifake_images" and "real_cifake_images"
 DATA_DIR = r"E:/IIITB/Predicathon/project/data/train"
 
-# ----------------------------------------------------------------
-# 3) Build Train/Val Datasets Directly from Directory
-# ----------------------------------------------------------------
+# --------------------------
+# Data Pipeline with Augmentation
+# --------------------------
+# Create a data augmentation pipeline. You can adjust or add more transforms as needed.
+data_augmentation = tf.keras.Sequential([
+    tf.keras.layers.RandomFlip("horizontal"),
+    tf.keras.layers.RandomRotation(0.1),
+    tf.keras.layers.RandomZoom(0.1),
+    tf.keras.layers.RandomContrast(0.1)
+])
+
+# Create training and validation datasets using image_dataset_from_directory.
 train_dataset = tf.keras.utils.image_dataset_from_directory(
     DATA_DIR,
-    labels="inferred",              # Infer labels from subfolder names
-    label_mode="categorical",       # 2D one-hot labels
-    validation_split=0.2,           # 20% for validation
-    subset="training",              # This dataset is the "training" subset
-    seed=42,                        # For reproducible splits
+    labels="inferred",
+    label_mode="categorical",
+    validation_split=0.2,
+    subset="training",
+    seed=42,
     shuffle=True,
     image_size=IMG_SIZE,
     batch_size=BATCH_SIZE
@@ -61,20 +55,34 @@ val_dataset = tf.keras.utils.image_dataset_from_directory(
     labels="inferred",
     label_mode="categorical",
     validation_split=0.2,
-    subset="validation",            # This dataset is the "validation" subset
+    subset="validation",
     seed=42,
     shuffle=True,
     image_size=IMG_SIZE,
     batch_size=BATCH_SIZE
 )
 
-# Optional: Prefetch for performance
+# Apply EfficientNet preprocessing to the images (this matches the pre-trained model expectations)
+def apply_preprocessing(image, label):
+    image = preprocess_input(image)
+    return image, label
+
+# Chain preprocessing and augmentation for the training dataset
+def augment(image, label):
+    image = data_augmentation(image)
+    return image, label
+
+train_dataset = train_dataset.map(augment, num_parallel_calls=tf.data.AUTOTUNE)
+train_dataset = train_dataset.map(apply_preprocessing, num_parallel_calls=tf.data.AUTOTUNE)
+val_dataset = val_dataset.map(apply_preprocessing, num_parallel_calls=tf.data.AUTOTUNE)
+
+# Cache and prefetch for better performance
 train_dataset = train_dataset.cache().prefetch(tf.data.AUTOTUNE)
 val_dataset   = val_dataset.cache().prefetch(tf.data.AUTOTUNE)
 
-# ----------------------------------------------------------------
-# 4) Learning Rate Scheduler (Cosine Decay Restarts)
-# ----------------------------------------------------------------
+# --------------------------
+# Learning Rate Scheduler (Cosine Decay Restarts)
+# --------------------------
 cosine_decay = tf.keras.optimizers.schedules.CosineDecayRestarts(
     initial_learning_rate=LEARNING_RATE,
     first_decay_steps=10,
@@ -83,21 +91,21 @@ cosine_decay = tf.keras.optimizers.schedules.CosineDecayRestarts(
     alpha=1e-6
 )
 
-# ----------------------------------------------------------------
-# 5) Build the Model (EfficientNetB3)
-# ----------------------------------------------------------------
+# --------------------------
+# Build the Model (EfficientNetB3)
+# --------------------------
 from tensorflow.keras.applications import EfficientNetB3
 from tensorflow.keras import layers, models, optimizers, callbacks
 
+# Load EfficientNetB3 with pre-trained ImageNet weights (excluding top layers)
 base_model = EfficientNetB3(
     weights="imagenet",
     include_top=False,
     input_shape=(IMG_SIZE[0], IMG_SIZE[1], 3)
 )
+base_model.trainable = False  # Freeze base model initially
 
-# Freeze the base model initially (transfer learning)
-base_model.trainable = False
-
+# Build the custom classification head
 model = models.Sequential([
     base_model,
     layers.GlobalAveragePooling2D(),
@@ -106,13 +114,12 @@ model = models.Sequential([
     layers.Dropout(DROPOUT_RATE),
     layers.Dense(256, activation='swish'),
     layers.Dropout(DROPOUT_RATE),
-    # Use float32 for the final layer if using mixed precision
-    layers.Dense(2, activation='softmax', dtype='float32')
+    layers.Dense(2, activation='softmax', dtype='float32')  # Final layer in float32
 ])
 
-# ----------------------------------------------------------------
-# 6) Compile the Model
-# ----------------------------------------------------------------
+# --------------------------
+# Compile the Model
+# --------------------------
 optimizer = optimizers.AdamW(learning_rate=cosine_decay, weight_decay=1e-5)
 model.compile(
     optimizer=optimizer,
@@ -120,15 +127,14 @@ model.compile(
     metrics=["accuracy"]
 )
 
-# ----------------------------------------------------------------
-# 7) Define Callbacks (Checkpoints, Early Stopping)
-# ----------------------------------------------------------------
-# NOTE: The `.keras` extension is now required if saving the full model
+# --------------------------
+# Callbacks: Model Checkpoint & Early Stopping
+# --------------------------
 checkpoint_cb = callbacks.ModelCheckpoint(
-    filepath="best_deepfake_model.keras",  # must end with .keras in TF 2.13+
+    filepath="best_deepfake_model.keras",  # Must end with .keras in TF 2.13+
     save_best_only=True,
     monitor="val_accuracy",
-    save_weights_only=False  # saving the full model in .keras format
+    save_weights_only=False
 )
 
 early_stop_cb = callbacks.EarlyStopping(
@@ -137,30 +143,29 @@ early_stop_cb = callbacks.EarlyStopping(
     restore_best_weights=True
 )
 
-# ----------------------------------------------------------------
-# 8) Training - Part 1 (Frozen Base)
-# ----------------------------------------------------------------
+# --------------------------
+# Training Phase 1: Frozen Base
+# --------------------------
 history_frozen = model.fit(
     train_dataset,
     validation_data=val_dataset,
-    epochs=EPOCHS_FROZEN,   # 5 epochs
+    epochs=EPOCHS_FROZEN,
     callbacks=[checkpoint_cb, early_stop_cb]
 )
 
-# ----------------------------------------------------------------
-# 9) Unfreeze & Fine-tune
-# ----------------------------------------------------------------
+# --------------------------
+# Training Phase 2: Fine-Tuning (Unfreeze Base Model)
+# --------------------------
 base_model.trainable = True
 
 history_unfrozen = model.fit(
     train_dataset,
     validation_data=val_dataset,
-    epochs=EPOCHS_UNFROZEN,  # 20 epochs
+    epochs=EPOCHS_UNFROZEN,
     callbacks=[checkpoint_cb, early_stop_cb]
 )
 
-# ----------------------------------------------------------------
-# 10) Save Final Model in TF SavedModel Format (Optional)
-# ----------------------------------------------------------------
-# If you also want to save in the older "SavedModel" folder format:
-model.save("efficientnet_deepfake_detector_v2_tf")  
+# --------------------------
+# Save Final Model (TF SavedModel Format)
+# --------------------------
+model.save("efficientnet_deepfake_detector_v2_tf")
