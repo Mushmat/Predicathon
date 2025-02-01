@@ -10,7 +10,7 @@ real_images_path = "E:/IIITB/Predicathon/project/data/train/real_cifake_images"
 test_images_path = "E:/IIITB/Predicathon/project/data/test/test"
 
 # Image size (updated to match EfficientNetB3)
-IMG_SIZE = (128, 128)  # Increased from 32x32 to 128x128
+IMG_SIZE = (96, 96)  # Increased from 32x32 to 128x128
 
 # Function to load and resize images
 def load_images_from_folder(folder_path, label):
