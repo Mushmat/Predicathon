@@ -87,15 +87,22 @@ The predictions will be saved in the outputs/teamname_prediction.json file.
 Our final submission includes:
 ✅ 1. Predicted JSON File (Spades_prediction.json)
 - Format:
+- 
 - `` [
     { "index": "1.png", "prediction": "fake" },
     { "index": "2.png", "prediction": "real" }
 ] ``
+
 - Stored in ``/outputs/``
-✅ 2. Final Report + Presentation (Spades_presentation.pdf)
+
+- ✅ 2. Final Report + Presentation (Spades_presentation.pdf)
+  
 - Includes methodology, preprocessing steps, model details, challenges, and results.
-✅ 3. Code Repository (Optional)
+  
+- ✅ 3. Code Repository (Optional)
+  
 - GitHub repository for reproducibility.
+  
 
 ## 🚧 Challenges Faced
 
@@ -106,28 +113,39 @@ Our final submission includes:
 
 ## 🔮 Future Scope
 
-🔹 Improve Deepfake Generalization: Train on larger datasets for better generalizability.
-🔹 Enhance Detection with Video Input: Extend the model for real-time deepfake detection.
-🔹 Optimize Model for Mobile Deployment: Convert to TensorFlow Lite for mobile applications.
-🔹 Explainable AI: Integrate Grad-CAM to visualize model decision-making.
+-🔹 Improve Deepfake Generalization: Train on larger datasets for better generalizability.
+
+-🔹 Enhance Detection with Video Input: Extend the model for real-time deepfake detection.
+
+-🔹 Optimize Model for Mobile Deployment: Convert to TensorFlow Lite for mobile applications.
+
+-🔹 Explainable AI: Integrate Grad-CAM to visualize model decision-making.
+
 
 ## ❓ FAQs
 
 - 1. How do I run the model on my system?
-Follow the Installation & Running the Model section.
+
+- Follow the Installation & Running the Model section.
 
 - 2. Can I train the model on my own dataset?
-Yes! Modify train_model.py and provide your dataset in /data/train/.
+
+- Yes! Modify train_model.py and provide your dataset in /data/train/.
 
 - 3. What format should the test images be in?
-Images should be JPEG/PNG, and stored in /data/test/.
+
+- Images should be JPEG/PNG, and stored in /data/test/.
    
 ## 🙌 Acknowledgements
 
-🔹 TensorFlow: Framework used for model development.
-🔹 Albumentations: Data augmentation techniques.
-🔹 OpenAI & Research Papers: Reference materials.
-🔹 GitHub & Community Support: Collaboration and resources.
+-  🔹 TensorFlow: Framework used for model development.
+
+- 🔹 Albumentations: Data augmentation techniques.
+
+- 🔹 OpenAI & Research Papers: Reference materials.
+
+- 🔹 GitHub & Community Support: Collaboration and resources.
+  
 
 🔗 Contact Us
 For queries, reach out via GitHub Issues.
