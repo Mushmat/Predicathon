@@ -87,7 +87,7 @@ The predictions will be saved in the outputs/teamname_prediction.json file.
 Our final submission includes:
 ✅ 1. Predicted JSON File (Spades_prediction.json)
 - Format:
-- 
+
 - `` [
     { "index": "1.png", "prediction": "fake" },
     { "index": "2.png", "prediction": "real" }
