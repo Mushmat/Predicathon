@@ -27,17 +27,17 @@ Welcome to our Deepfake Detection Model submission for the competition. Our AI-p
 
 ## 📁 Folder Structure
 
-`` Deepfake-Detection/
-│── data/                        # Data folder (Test images should be placed here)
-│── models/                      # Saved trained models
-│── scripts/                      # Python scripts for preprocessing & evaluation
-│   ├── train_model.py           # Training script
-│   ├── evaluate_model.py        # Evaluation script (to generate predictions)
-│── outputs/                      # Folder for storing generated JSON predictions
-│── requirements.txt              # Dependencies for running the model
-│── Spades_prediction.json      # Final JSON file for submission
-│── README.md                     # This file
-│── Spades_presentation.pdf     # Final Report + Presentation (single PDF) ``
+`` Deepfake-Detection/ ``
+``│── data/                        # Data folder (Test images should be placed here)``
+``│── models/                      # Saved trained models``
+``│── scripts/                      # Python scripts for preprocessing & evaluation``
+``│   ├── train_model.py           # Training script``
+``│   ├── evaluate_model.py        # Evaluation script (to generate predictions)``
+``│── outputs/                      # Folder for storing generated JSON predictions``
+``│── requirements.txt              # Dependencies for running the model``
+``│── Spades_prediction.json      # Final JSON file for submission``
+``│── README.md                     # This file``
+``│── Spades_presentation.pdf     # Final Report + Presentation (single PDF) ``
 
 ## 🛠️ Running Requirements
 
@@ -54,8 +54,8 @@ Ensure you have Python 3.9+ installed on your system.
 ## 📥 Installation & Running the Model
 
 ### Step 1: Clone the Repository
-`` git clone https://github.com/your-repository/deepfake-detection.git
-cd deepfake-detection ``
+`` git clone https://github.com/Mushmat/Predicathon/tree/main ``
+`` cd deepfake-detection ``
 
 ### Step 2: Install Dependencies
 `` pip install -r requirements.txt ``
