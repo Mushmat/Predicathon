@@ -28,16 +28,17 @@ Welcome to our Deepfake Detection Model submission for the competition. Our AI-p
 ## 📁 Folder Structure
 
 `` Deepfake-Detection/ ``
-``│── data/                        # Data folder (Test images should be placed here)``
-``│── models/                      # Saved trained models``
-``│── scripts/                      # Python scripts for preprocessing & evaluation``
-``│   ├── train_model.py           # Training script``
-``│   ├── evaluate_model.py        # Evaluation script (to generate predictions)``
-``│── outputs/                      # Folder for storing generated JSON predictions``
-``│── requirements.txt              # Dependencies for running the model``
-``│── Spades_prediction.json      # Final JSON file for submission``
-``│── README.md                     # This file``
-``│── Spades_presentation.pdf     # Final Report + Presentation (single PDF) ``
+
+``│── data/ # Data folder (Test images should be placed here)``
+``│── models/  # Saved trained models``
+``│── scripts/ # Python scripts for preprocessing & evaluation``
+``├── train_model.py  # Training script``
+``├── evaluate_model.py  # Evaluation script (to generate predictions)``
+``│── outputs/  # Folder for storing generated JSON predictions``
+``│── requirements.txt  # Dependencies for running the model``
+``│── Spades_prediction.json # Final JSON file for submission``
+``│── README.md # This file``
+``│── Spades_presentation.pdf # Final Report + Presentation (single PDF) ``
 
 ## 🛠️ Running Requirements
 
