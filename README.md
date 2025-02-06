@@ -67,7 +67,9 @@ Ensure all test images are stored in the /data/test/ folder.
 ### Step 4: Run the Model
 Execute the evaluation script to generate predictions:
 
-`` python scripts/evaluate_model.py ``
+`` python evaluate_model.py ``
+Then Run
+`` python generate_predictions.py ``
 
 ### Step 5: Check Predictions
 The predictions will be saved in the outputs/teamname_prediction.json file.
