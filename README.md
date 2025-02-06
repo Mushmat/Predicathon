@@ -1,195 +1,156 @@
 
-![Logo](https://i.ibb.co/9GwTpSD/Picture1.png)
+![Logo](https://i.ibb.co/tphQf7Cf/Picture1.png)
 
 
-# 🐾 Wiggles - Your Ultimate Pet Adoption Companion 🐾
+# 🛡️ Deepfake Detection using AI 🛡️
 
-(**Prototype Version 0.9.0-alpha**)
+(**Final Submission - KFold Model**)
 
-Welcome to Wiggles! This comprehensive mobile application facilitates the adoption process for cats and dogs. Wiggles connects potential pet owners with pets needing a home, providing detailed profiles and personalized recommendations to ensure the perfect match. Our mission is to streamline the adoption process and support pet owners with valuable resources.
+Welcome to our Deepfake Detection Model submission for the competition. Our AI-powered deepfake detection system analyzes images to distinguish between real and fake images with high accuracy. The model is trained using a K-Fold Cross-Validation approach, ensuring robustness and generalizability.
 
 ## 🎯 Objectives
 
-- **Promote Pet Adoption**: Increase the adoption rates by providing a user-friendly platform where users can browse and adopt pets. 
-- **Personalized Recommendations**: Match users with pets that fit their lifestyle and preferences using a quiz-based recommendation system. 
-- **Support Pet Owners**: Offer resources such as pet care tips, nearby vet locations ,and community support to ensure a smooth transition for new pet owners.
-- **Comprehensive Pet Profile**: Provide detailed information about each pet to help users make informed decisions.
+- **Detect Deepfake Images:**: Accurately classify images as real or fake using advanced deep learning techniques.
+- **Improve Model Robustness:**: Implement K-Fold Cross-Validation for better generalization.
+- **Optimize for Performance:**: Use CNN and data augmentation for improved classification accuracy.
+- **Provide an Easy-to-Use Solution:**: Ensure smooth deployment with a structured codebase.
   
 ## 🔍 Features
 
-- **Exclusive Pet Profiles**: Every pet gets a unique profile with detailed information.
+- **✅ High Accuracy:**: Trained with CNN for superior performance.
 
-- **Hassle-Free Adoption**: Streamlined process for adopting pets.
-- **Personalized Recommendations**: Quiz-based system to match pets with owners.
-- **Data Persistence**: Local storage with Room Database.
-- **User Authentication**: Secure login and signup with Firebase.
-- **Adoption Request Tracking**: Monitor the progress of your adoption applications.
-- **Pet Filtering and Bookmarking**: Easily find and save your favorite pets.
-- **Pet Care Tips**: Essential tips to help you care for your new pet.
-- **Nearby Pets Locator**: Find pets available for adoption near you.
-- **Community Connection**: Connect with other pet owners.
-- **Modern UI & Easy-to-Use**: A visually appealing and intuitive interface.
-- **Shelter Information**: Details about local shelters.
-- **Informational Screens**: About Us, FAQs, and more.
+- **✅ K-Fold Cross-Validation:**: Enhances generalizability by training on multiple data splits.
+- **✅ Data Augmentation:**: Ensures robustness against varied deepfake patterns.
+- **✅ Scalability:**:  Designed to handle large datasets with batch processing.
+- **✅ Optimized Performance:**: Uses early stopping and learning rate scheduling for efficient training.
+- **✅ Structured Codebase:**: Includes a requirements.txt file and a clear setup guide.
 
+## 📁 Folder Structure
 
-## 🛠️ Implementation Details
+`` Deepfake-Detection/ ``
 
-- **User Authentication**: Secure user login and signup using Firebase Authentication.
+``│── data/ # Data folder (Test images should be placed here)``
+``│── models/  # Saved trained models``
+``│── scripts/ # Python scripts for preprocessing & evaluation``
+``├── train_model.py  # Training script``
+``├── evaluate_model.py  # Evaluation script (to generate predictions)``
+``│── outputs/  # Folder for storing generated JSON predictions``
+``│── requirements.txt  # Dependencies for running the model``
+``│── Spades_prediction.json # Final JSON file for submission``
+``│── README.md # This file``
+``│── Spades_presentation.pdf # Final Report + Presentation (single PDF) ``
 
-- **Data Persistence**: Local storage using Room Database to keep track of user profiles, bookmarked pets, and adoption applications.
+## 🛠️ Running Requirements
 
-- **Pet Profiles**: Detailed pet profiles are displayed using data fetched from a predefined dataset.
+Ensure you have Python 3.9+ installed on your system.
 
-- **Personalized Quiz**: A quiz-based system that collects user preferences and suggests pets accordingly.
+### Install Dependencies:
+`` pip install -r requirements.txt ``
 
-- **Adoption Application**: Users can submit adoption applications and track their progress within the app.
+### Hardware Requirements:
+- CPU: Minimum Intel i5 (Recommended: Intel i7 or AMD Ryzen 7)
+- GPU (Optional, Recommended for training): NVIDIA RTX 3060+ (CUDA enabled)
+- RAM: Minimum 8GB (Recommended: 16GB+)
 
-- **Modern UI Design**: A visually appealing interface designed using Jetpack Compose, with gradient buttons and customized themes.
+## 📥 Installation & Running the Model
 
-- **Navigation**: Seamless navigation throughout the app using Jetpack Navigation Component.
+### Step 1: Clone the Repository
+`` git clone https://github.com/Mushmat/Predicathon/tree/main ``
+`` cd deepfake-detection ``
 
-## 📚💻 Code Documentation
+### Step 2: Install Dependencies
+`` pip install -r requirements.txt ``
 
-[Code Documentation](https://github.com/Mushmat/Wiggles/blob/master/Code_Documentation/code_doc.md)
+### Step 3: Place Test Images
+Ensure all test images are stored in the /data/test/ folder.
 
-## 📥 Installation
+### Step 4: Run the Model
+Execute the evaluation script to generate predictions:
 
-To run the Wiggles App, follow these steps:
+`` python evaluate_model.py ``
+Then Run
+`` python generate_predictions.py ``
 
-### Follow the link
+### Step 5: Check Predictions
+The predictions will be saved in the outputs/teamname_prediction.json file.
 
-[Go on this link to download the apk](https://drive.google.com/file/d/1dyrvzFw9_2jPOnSyAxuP53zmnrjAMKj9/view?usp=sharing) 
+## 📚 Model Details
 
-### OR Run using Android Studio:
+### Model Architecture
+- Backbone Model: CNN
+- Input Size: 32x32
+- Loss Function: Categorical Cross-Entropy
+- Optimizer: Adam (Adaptive Learning Rate)
+- Learning Rate Schedule: Cosine Decay with Warmup
+- Regularization: L2 weight decay, dropout
+- Data Augmentation: Albumentations library (random rotations, flips, brightness adjustments)
 
-### Prerequisites
+## 📊 Submission Components
+Our final submission includes:
+✅ 1. Predicted JSON File (Spades_prediction.json)
+- Format:
 
-Before you can run the Wiggles App, ensure you have the following installed on your system:
-- [Android Studio Koala (latest version as of July 2024)](https://developer.android.com/studio)
+- `` [
+    { "index": "1.png", "prediction": "fake" },
+    { "index": "2.png", "prediction": "real" }
+] ``
 
-- [Git (for cloning the repository)](https://git-scm.com/downloads)
+- Stored in ``/outputs/``
 
-- An Android device or emulator for testing
-
-### Steps to Install and run
- 1. **Clone the Repository**
- - Go to the Github repository and click on the **'Code'** button.
-
- - Copy the HTTPS web URL:
-
-```bash
-https://github.com/Mushmat/Wiggles.git
-```
-2. **Open the Project in Android Studio**
-- Open Android Studio (latest version)
-```bash
-- File > New > Open from Version Control
-```
-
-- Paste the copied URL and clone the repository
+- ✅ 2. Final Report + Presentation (Spades_presentation.pdf)
   
-3. **Wait for Gradle Build**
-- The files will be cloned and the project will open shortly once the Gradle build is finished.
-4. **Run the App**
-- Once the Gradle build is complete, you can run the app using the play button present on the top bar. 
-
-- Select an emulator or connect an Android device to run the app.
-
-### Additional Setup (Optional)
-If you encounter any issues or need further customization, refer to the following resources:
-
-- [Android Studio Documentation](https://developer.android.com/studio/intro)
-- [Firebase Documentation](https://firebase.google.com/docs)
-
-
-## 🛠️ Tech Stack
-
-The Wiggles App is build using the following technologies:
-
-**Frontend:** Kotlin, Jetpack Compose, Android Studio
-
-**Backend:** Firebase Authentication, Firebase Firestore
-
-**Libraries and Tools:** Coil, Room Database, Navigation Component, Gradle
-
-**Additional Services:** Github
-
-
-
-## 🎨 Color Reference
-
-| Color             | Hex                                                                |
-| ----------------- | ------------------------------------------------------------------ |
-| Dark Blue | ![#1a1a73](https://placehold.co/15x15/1a1a73/1a1a73.png) #1A1A73 |
-| Orange | ![#ff7043](https://placehold.co/15x15/ff7043/ff7043.png) #FF7043 |
-| Black | ![#000000](https://placehold.co/15x15/000000/000000.png) #000000 |
-| Purple | ![#8e44ad](https://placehold.co/15x15/8e44ad/8e44ad.png) #8E44AD |
-| Red | ![#FF0000](https://placehold.co/15x15/ff0000/ff0000.png) #FF0000 |
-| Green | ![#388e3c](https://placehold.co/15x15/388e3c/388e3c.png) #388E3C |
-| Light Blue | ![#3498db](https://placehold.co/15x15/3498DB/3498DB.png) #3498DB |
+- Includes methodology, preprocessing steps, model details, challenges, and results.
+  
+- ✅ 3. Code Repository (Optional)
+  
+- GitHub repository for reproducibility.
+  
 
 ## 🚧 Challenges Faced
 
-- **Responsiveness**: Ensuring the app remains responsive while processing complex AI algorithms.  
-  **Solution**: Implemented asynchronous processing and optimized algorithms.
-- **Scalability**: Designing for a growing user base and data volume.  
-  **Solution**: Utilized cloud services for scalable storage and processing.
-- **Data Synchronization**: Ensuring data consistency across devices.  
-  **Solution**: Integrated Firebase for secure and consistent data storage.
-- **UI Design**: Creating an intuitive interface.  
-  **Solution**: Conducted user research and iterative improvements.
-
+- **Data Imbalance**: Adjusted by class weighting and augmentation.
+- **Overfitting**: Reduced using dropout layers, L2 regularization, and early stopping.
+- **Computation Bottlenecks**: Optimized by batch normalization and mixed precision training.
 
 
 ## 🔮 Future Scope
 
-- **Realtime Data**: Collaborate with pet shelters for real-time pet data.
-- **Pet Services**: Implement services for pet care such as vaccination schedules.
-- **In-App Messaging**: Allow direct communication with shelters and other pet owners.
-- **Advanced Filtering**: Enhance filtering options with more criteria.
-- **AI-Powered Recommendations**: Improve accuracy of recommendations with machine learning.
-- **Stronger Authentication**: Add SMS verification and email notifications.
-- **Volunteer Opportunities**: Platform for finding volunteer opportunities.
-- **Social Media Integration**: Share adoption stories and profiles on social media.
-- **Donate**: Allow users to donate to shelters.
+-🔹 Improve Deepfake Generalization: Train on larger datasets for better generalizability.
+
+-🔹 Enhance Detection with Video Input: Extend the model for real-time deepfake detection.
+
+-🔹 Optimize Model for Mobile Deployment: Convert to TensorFlow Lite for mobile applications.
+
+-🔹 Explainable AI: Integrate Grad-CAM to visualize model decision-making.
+
 
 ## ❓ FAQs
 
-1. **What is Wiggles?**  
-   Wiggles is an Android app designed to help users find and adopt pets.
+- 1. How do I run the model on my system?
 
-2. **System Requirements:**  
-   - Android Studio (latest version)
-   - JDK 8 or higher
-   - Android Emulator or real device
-   - Internet connection
+- Follow the Installation & Running the Model section.
 
-3. **How to Contribute?**  
-   - Fork the repository
-   - Create a new branch
-   - Commit changes with clear messages
-   - Push to your forked repo
-   - Create a pull request
+- 2. Can I train the model on my own dataset?
 
-4. **Reporting Bugs/Features:**  
-   Create an issue on GitHub with detailed information.
+- Yes! Modify train_model.py and provide your dataset in /data/train/.
 
-5. **Costs:**  
-   Wiggles is free to use.
+- 3. What format should the test images be in?
 
-6. **iOS Version:**  
-   Currently available for Android only.
+- Images should be JPEG/PNG, and stored in /data/test/.
    
 ## 🙌 Acknowledgements
 
-- **[Pet Finder](https://www.petfinder.com/)**: Inspiration and resources.
-- **[Android Studio Developers](https://developer.android.com/develop)**: Comprehensive development tools.
-- **[Firebase](https://firebase.google.com/)**: Robust backend services.
-- **[Coil](https://coil-kt.github.io/coil/)**: Efficient image loading.
-- **[GitHub](https://github.com/)**: For storage and improvisations. 
-- **[OpenAI](https://openai.com/)**: Language models for generating content and code suggestions.
-- **Contributors**: Valuable feedback and support during development.
+-  🔹 TensorFlow: Framework used for model development.
 
-![Thank You](https://i.ibb.co/bQgHRDv/82124ST.jpg)
+- 🔹 Albumentations: Data augmentation techniques.
+
+- 🔹 OpenAI & Research Papers: Reference materials.
+
+- 🔹 GitHub & Community Support: Collaboration and resources.
+  
+
+🔗 Contact Us
+For queries, reach out via GitHub Issues.
+
+🚀 Spades | Deepfake Detection AI | Competition Submission 🚀
 
