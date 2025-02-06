@@ -1,4 +1,5 @@
 import os
+
 # --------------------------
 # CPU-Only Settings
 # --------------------------
@@ -22,17 +23,19 @@ LEARNING_RATE = 0.001
 DROPOUT_RATE = 0.5   # Dropout rate
 L2_REG = 1e-4        # L2 regularization factor
 
-DATA_DIR = r"E:/IIITB/Predicathon/project/data/train"
+# Set dataset directory dynamically using environment variables
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.getenv("DATA_DIR", os.path.join(BASE_DIR, "data", "train"))
 
 # --------------------------
 # Data Pipeline with Augmentation
 # --------------------------
 data_augmentation = tf.keras.Sequential([
     tf.keras.layers.RandomFlip("horizontal"),
-    tf.keras.layers.RandomRotation(0.2),        # increased rotation range
-    tf.keras.layers.RandomZoom(0.2),            # increased zoom range
-    tf.keras.layers.RandomTranslation(0.1, 0.1),  # add translation
-    tf.keras.layers.RandomContrast(0.2)           # increase contrast variation
+    tf.keras.layers.RandomRotation(0.2),
+    tf.keras.layers.RandomZoom(0.2),
+    tf.keras.layers.RandomTranslation(0.1, 0.1),
+    tf.keras.layers.RandomContrast(0.2)
 ])
 
 # Create training and validation datasets using image_dataset_from_directory.
@@ -94,7 +97,6 @@ cosine_decay = tf.keras.optimizers.schedules.CosineDecay(
 def build_custom_cnn(input_shape=(32, 32, 3), num_classes=2):
     inputs = tf.keras.Input(shape=input_shape)
     
-    # Block 1
     x = layers.Conv2D(64, (3,3), padding='same', activation='relu',
                       kernel_regularizer=regularizers.l2(L2_REG))(inputs)
     x = layers.BatchNormalization()(x)
@@ -103,8 +105,7 @@ def build_custom_cnn(input_shape=(32, 32, 3), num_classes=2):
     x = layers.BatchNormalization()(x)
     x = layers.MaxPooling2D((2,2))(x)
     x = layers.Dropout(DROPOUT_RATE)(x)
-    
-    # Block 2
+
     x = layers.Conv2D(128, (3,3), padding='same', activation='relu',
                       kernel_regularizer=regularizers.l2(L2_REG))(x)
     x = layers.BatchNormalization()(x)
@@ -113,8 +114,7 @@ def build_custom_cnn(input_shape=(32, 32, 3), num_classes=2):
     x = layers.BatchNormalization()(x)
     x = layers.MaxPooling2D((2,2))(x)
     x = layers.Dropout(DROPOUT_RATE)(x)
-    
-    # Block 3
+
     x = layers.Conv2D(256, (3,3), padding='same', activation='relu',
                       kernel_regularizer=regularizers.l2(L2_REG))(x)
     x = layers.BatchNormalization()(x)
@@ -122,12 +122,11 @@ def build_custom_cnn(input_shape=(32, 32, 3), num_classes=2):
                       kernel_regularizer=regularizers.l2(L2_REG))(x)
     x = layers.BatchNormalization()(x)
     x = layers.GlobalAveragePooling2D()(x)
-    
-    # Fully connected layers
+
     x = layers.Dense(128, activation='relu', kernel_regularizer=regularizers.l2(L2_REG))(x)
     x = layers.Dropout(DROPOUT_RATE)(x)
     outputs = layers.Dense(num_classes, activation='softmax', dtype='float32')(x)
-    
+
     model = tf.keras.Model(inputs=inputs, outputs=outputs)
     return model
 
@@ -144,7 +143,7 @@ model.compile(optimizer=optimizer, loss="categorical_crossentropy", metrics=["ac
 # Callbacks: Model Checkpoint & Early Stopping
 # --------------------------
 checkpoint_cb = callbacks.ModelCheckpoint(
-    filepath="best_custom_cnn_improved.keras",  # Save in native Keras format
+    filepath="best_custom_cnn_improved.keras",
     save_best_only=True,
     monitor="val_accuracy",
     save_weights_only=False,

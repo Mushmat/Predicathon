@@ -34,8 +34,9 @@ class WarmUpCosineDecay(tf.keras.optimizers.schedules.LearningRateSchedule):
 print("Running Evaluation...")
 
 # Set the path to your test images folder.
-# IMPORTANT: Ensure this folder contains only your test images (e.g. 500 images).
-TEST_IMAGES_PATH = r"E:/IIITB/Predicathon/project/data/test/test"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.getenv("DATA_DIR", os.path.join(BASE_DIR, "data", "test"))
+TEST_IMAGES_PATH = os.path.join(DATA_DIR, "test")
 
 def load_test_images(folder_path, size=(32, 32)):
     """
@@ -45,6 +46,10 @@ def load_test_images(folder_path, size=(32, 32)):
       - A numpy array of preprocessed images.
       - A list of the corresponding image filenames.
     """
+    if not os.path.exists(folder_path):
+        print(f"Warning: {folder_path} does not exist.")
+        return np.array([]), []
+    
     images = []
     image_names = []
     for img_file in os.listdir(folder_path):
@@ -66,23 +71,27 @@ def load_test_images(folder_path, size=(32, 32)):
 test_images, image_names = load_test_images(TEST_IMAGES_PATH, size=(32, 32))
 print(f"Number of test images loaded: {len(test_images)}")
 
-# Load the best model from Fold 2 with custom_objects so that WarmUpCosineDecay is recognized.
-model = load_model("best_model_fold_2.keras", custom_objects={"WarmUpCosineDecay": WarmUpCosineDecay})
-print("Model loaded successfully!")
+if len(test_images) > 0:
+    # Load the best model from Fold 2 with custom_objects so that WarmUpCosineDecay is recognized.
+    model_path = os.getenv("MODEL_PATH", "best_model_fold_2.keras")
+    model = load_model(model_path, custom_objects={"WarmUpCosineDecay": WarmUpCosineDecay})
+    print("Model loaded successfully!")
 
-# Make predictions on the test images
-predictions = model.predict(test_images)
-predicted_labels = np.argmax(predictions, axis=1)
+    # Make predictions on the test images
+    predictions = model.predict(test_images)
+    predicted_labels = np.argmax(predictions, axis=1)
 
-def get_predictions_and_names():
-    """
-    Returns:
-      - predicted_labels: a numpy array of predicted class indices.
-      - image_names: a list of the corresponding image filenames.
-    """
-    return predicted_labels, image_names
+    def get_predictions_and_names():
+        """
+        Returns:
+          - predicted_labels: a numpy array of predicted class indices.
+          - image_names: a list of the corresponding image filenames.
+        """
+        return predicted_labels, image_names
 
-if __name__ == "__main__":
-    # Print out predictions for each test image
-    for name, label in zip(image_names, predicted_labels):
-        print(f"Image: {name}, Predicted Class: {label}")
+    if __name__ == "__main__":
+        # Print out predictions for each test image
+        for name, label in zip(image_names, predicted_labels):
+            print(f"Image: {name}, Predicted Class: {label}")
+else:
+    print("No test images found. Exiting.")

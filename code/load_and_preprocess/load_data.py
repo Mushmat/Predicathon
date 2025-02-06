@@ -6,8 +6,11 @@ import matplotlib.pyplot as plt
 # --------------------------
 # Paths & Settings
 # --------------------------
-fake_images_path = r"E:/IIITB/Predicathon/project/data/train/fake_cifake_images"
-real_images_path = r"E:/IIITB/Predicathon/project/data/train/real_cifake_images"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.getenv("DATA_DIR", os.path.join(BASE_DIR, "data", "train"))
+
+fake_images_path = os.path.join(DATA_DIR, "fake_cifake_images")
+real_images_path = os.path.join(DATA_DIR, "real_cifake_images")
 IMG_SIZE = (32, 32)  # Use 32x32 as provided by the evaluator
 
 # --------------------------
@@ -16,6 +19,10 @@ IMG_SIZE = (32, 32)  # Use 32x32 as provided by the evaluator
 def load_images_from_folder(folder_path, label):
     images = []
     labels = []
+    if not os.path.exists(folder_path):
+        print(f"Warning: {folder_path} does not exist.")
+        return np.array([]), np.array([])
+    
     for img_file in os.listdir(folder_path):
         img_path = os.path.join(folder_path, img_file)
         if os.path.isfile(img_path):
@@ -33,6 +40,10 @@ def load_images_from_folder(folder_path, label):
 # --------------------------
 fake_images, fake_labels = load_images_from_folder(fake_images_path, label=0)
 real_images, real_labels = load_images_from_folder(real_images_path, label=1)
+
+if len(fake_images) == 0 or len(real_images) == 0:
+    print("Error: One or more image directories are empty or missing.")
+    exit()
 
 # Combine datasets
 train_images = np.concatenate((fake_images, real_images), axis=0)
@@ -60,7 +71,8 @@ print(f"Successfully loaded {len(train_images)} images.")
 # --------------------------
 # Save Preprocessed Images as NumPy Arrays
 # --------------------------
-np.save(r"E:/IIITB/Predicathon/project/data/train_images.npy", train_images)
-np.save(r"E:/IIITB/Predicathon/project/data/train_labels.npy", train_labels)
+out_dir = os.getenv("OUT_DIR", os.path.join(BASE_DIR, "data"))
+np.save(os.path.join(out_dir, "train_images.npy"), train_images)
+np.save(os.path.join(out_dir, "train_labels.npy"), train_labels)
 
 print("Data saved successfully.")
