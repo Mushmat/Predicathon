@@ -1,5 +1,5 @@
 
-![Logo](https://i.ibb.co/ynZhg6bg/Picture1.png)
+![Logo](https://i.ibb.co/tphQf7Cf/Picture1.png)
 
 
 # 🛡️ Deepfake Detection using AI 🛡️
